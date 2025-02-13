@@ -23,10 +23,18 @@ class OneHotEncoder(Callable):
         :param data: 1D array containing labels.
             For example, data = [0, 1, 3, 3, 1, 9, ...]
         """
-        return NotImplementedError
+        self.classes = np.unique(data)
+        self.n_classes = self.classes.shape[0]
+        # create mappings from class to one_hot
+        self.class_to_indexes = {classs: index for index, classs in enumerate(self.classes)}
+
 
     def forward(self, data):
-        return NotImplementedError
+        if not hasattr(self, "class_to_indexes"):
+            self.fit(data)
+        label_indexes = np.array([self.class_to_indexes[label] for label in data])
+        return np.eye(self.n_classes)[label_indexes]
 
     def inverse(self, data):
-        return NotImplementedError
+        indexes = np.argmax(data, axis=1)
+        return self.classes[indexes]
