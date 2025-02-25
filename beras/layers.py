@@ -26,7 +26,7 @@ class Dense(Diffable):
         return [w]
 
     def get_weight_gradients(self) -> list[Tensor]:
-        return [self.input_dict['x'], Tensor(1)]
+        return [np.expand_dims(self.input_dict['x'], axis=-1), np.ones_like(self.b)]
 
     @staticmethod
     def _initialize_weight(initializer, input_size, output_size) -> tuple[Variable, Variable]:
@@ -60,8 +60,8 @@ class Dense(Diffable):
         elif initializer == 'normal':
             weights = np.random.normal(size=(input_size, output_size))
         elif initializer == 'xavier':
-            limit = np.sqrt(6 / (input_size + output_size))
-            weights = np.random.uniform(-limit, limit, size=(input_size, output_size))
+            limit = np.sqrt(2 / (input_size + output_size))
+            weights = np.random.normal(size=(input_size, output_size)) * limit
         elif initializer == 'kaiming':
             stddev = np.sqrt(2 / input_size)
             weights = np.random.normal(0, stddev, size=(input_size, output_size))
