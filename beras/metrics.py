@@ -13,7 +13,7 @@ class CategoricalAccuracy(Callable):
         pred_cls = np.argmax(probs, axis=1)
         
         # Convert one-hot encoded labels to class indices
-        true_cls = np.argmax(labels, axis=1)
+        true_cls = np.argmax(labels, axis=-1)
         
         # Compare predictions with true labels and compute accuracy
         return np.mean(pred_cls == true_cls)

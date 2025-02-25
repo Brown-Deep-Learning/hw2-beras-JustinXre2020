@@ -1,6 +1,7 @@
 from collections import defaultdict, deque
 
 from beras.core import Diffable, Tensor
+import numpy as np
 
 class GradientTape:
 
@@ -71,7 +72,7 @@ class GradientTape:
                 grads[id(input_weight)] = [grad]
 
         # For each source, sum the gradient contributions.
-        return [grads[id(src)][0] for src in sources]
+        return [grads[id(src)][0] if grads[id(src)] else np.zeros_like(src) for src in sources]
         # for src in sources:
         #     # Sum gradients; if no gradient was collected, return an array of zeros matching src.
         #     if id(src) in grads:

@@ -59,5 +59,5 @@ if __name__ == '__main__':
 
     # 5. Evaluate the model
     metrics = model.evaluate(test_inputs, test_labels, batch_size=32)
-    print(f"Test matrics: {metrics}")
+    print(f"Test metrics: {metrics}")
     
