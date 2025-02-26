@@ -50,14 +50,17 @@ if __name__ == '__main__':
 
     # 3. Load and preprocess the data
     train_inputs, train_labels, test_inputs, test_labels = load_and_preprocess_data()
-    one_hot_encoder = OneHotEncoder()
-    one_hot_encoder.fit(train_labels)
-    train_labels = one_hot_encoder.forward(train_labels)
 
     # 4. Train the model
-    model.fit(train_inputs, train_labels, epochs=10, batch_size=32)
+    one_hot_encoder_train = OneHotEncoder()
+    one_hot_encoder_train.fit(train_labels)
+    train_labels = one_hot_encoder_train.forward(train_labels)
+    model.fit(train_inputs, train_labels, epochs=1, batch_size=32)
 
-    # 5. Evaluate the model
-    metrics = model.evaluate(test_inputs, test_labels, batch_size=32)
-    print(f"Test metrics: {metrics}")
-    
+    # 5. Evaluate the model and save best model prediction
+    one_hot_encoder_test = OneHotEncoder()
+    one_hot_encoder_test.fit(test_labels)
+    test_labels = one_hot_encoder_test.forward(test_labels)
+    metrics, predictions = model.evaluate(test_inputs, test_labels, batch_size=32)
+    np.save("predictions.npy", one_hot_encoder_test.inverse(predictions))
+    print(f"Test metrics: {metrics}")    

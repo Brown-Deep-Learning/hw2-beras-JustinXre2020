@@ -31,31 +31,6 @@ class CategoricalCrossEntropy(Loss):
         """Categorical cross entropy forward pass!"""
         epsilon = 1e-15
         y_pred = np.clip(y_pred, epsilon, 1 - epsilon)
-        
-        # Store inputs for gradient computation
-        # self.input_dict = {'y_pred': y_pred}
-        
-        # Check if y_true is not one-hot encoded (i.e., it's a 1D array of class indices)
-        if y_true.ndim == 1 or (y_true.ndim == 2 and y_true.shape[1] == 1):
-            # Convert class indices to one-hot
-            num_classes = y_pred.shape[1]
-            y_true_one_hot = np.zeros_like(y_pred)
-            
-            # Handle both flat arrays and column vectors
-            if y_true.ndim == 2:
-                indices = y_true.flatten()
-            else:
-                indices = y_true
-                
-            for i in range(len(indices)):
-                y_true_one_hot[i, indices[i]] = 1.0
-                
-            y_true = y_true_one_hot
-        
-        # Store the one-hot version for gradient computation
-        # self.input_dict['y_true'] = y_true
-        
-        # Compute cross-entropy loss
         return -np.mean(np.sum(y_true * np.log(y_pred), axis=-1))
 
 

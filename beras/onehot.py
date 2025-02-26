@@ -36,5 +36,5 @@ class OneHotEncoder(Callable):
         return np.eye(self.n_classes)[label_indexes]
 
     def inverse(self, data):
-        indexes = np.argmax(data, axis=1)
-        return self.classes[indexes]
+        indexes = np.argmax(data, axis=-1)
+        return indexes

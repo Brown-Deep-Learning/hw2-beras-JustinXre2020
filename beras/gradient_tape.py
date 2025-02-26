@@ -38,48 +38,37 @@ class GradientTape:
         # Use id(tensor) to get the object id of a tensor object.
         # in the end, your grads dictionary should have the following structure:
         # {id(tensor): [gradient]}
-        visited = set([id(target)])
+        visited = set()
 
         # What tensor and what gradient is for you to implement!
         # compose_input_gradients and compose_weight_gradients are methods that will be helpful
         while queue:
             current_layer = queue.popleft()
-            current_gradients = grads[id(current_layer)]
             # Look up the layer that produced this tensor.
             prev_layers = self.previous_layers.get(id(current_layer))
             if prev_layers is None:
                 continue
-
+            if id(current_layer) in visited:
+                continue
+            visited.add(id(current_layer))
 
             # compose the gradients with respect to the layer's inputs
+            current_gradients = grads[id(current_layer)]
             input_grads = prev_layers.compose_input_gradients(current_gradients)
             len_inputs = min(len(prev_layers.inputs), len(input_grads))
             for i in range(len_inputs):
                 input_val = prev_layers.inputs[i]
                 grad = input_grads[i]
                 grads[id(input_val)] = [grad]
-                if id(input_val) in visited:
-                    continue
-                visited.add(id(input_val))
                 queue.append(input_val)
             
             # Compose gradients with respect to the layer’s weights
             weight_grads = prev_layers.compose_weight_gradients(current_gradients)
             len_weights = min(len(prev_layers.weights), len(weight_grads))
             for i in range(len_weights):
-                input_weight = prev_layers.weights[i]
+                weight_val = prev_layers.weights[i]
                 grad = weight_grads[i]
-                grads[id(input_weight)] = [grad]
+                grads[id(weight_val)] = [grad]
 
         # For each source, sum the gradient contributions.
-        return [grads[id(src)][0] if grads[id(src)] else np.zeros_like(src) for src in sources]
-        # for src in sources:
-        #     # Sum gradients; if no gradient was collected, return an array of zeros matching src.
-        #     if id(src) in grads:
-        #         # Sum the list of gradient arrays.
-        #         total_grad = sum(grads[id(src)], start=np.zeros_like(src))
-        #     else:
-        #         print(src)
-        #         total_grad = np.zeros_like(src)
-        #     result.append(total_grad)
-        # return result
+        return [grads[id(src)][0] for src in sources]

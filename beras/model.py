@@ -7,6 +7,8 @@ from beras.core import Diffable, Tensor, Callable
 from beras.gradient_tape import GradientTape
 import numpy as np
 
+from beras.onehot import OneHotEncoder
+
 def print_stats(stat_dict:dict, batch_num=None, num_batches=None, epoch=None, avg=False):
     """
     Given a dictionary of names statistics and batch/epoch info,
@@ -114,17 +116,19 @@ class Model(Diffable):
         num_samples = x.shape[0]
         num_batches = int(np.ceil(num_samples / batch_size))
         eval_metrics = {"loss": [], "acc": []}
+        predictions = []
         for batch in range(num_batches):
             start = batch * batch_size
             end = min(num_samples, start + batch_size)
             batch_X = x[start:end]
             batch_y = y[start:end]
-            metrics, _ = self.batch_step(batch_X, batch_y, training=False)
+            metrics, prediction = self.batch_step(batch_X, batch_y, training=False)
+            predictions = prediction
             eval_metrics["loss"].append(metrics["loss"])
             eval_metrics["acc"].append(metrics["acc"])
             print_stats(metrics, batch, num_batches)
         print_stats(eval_metrics, batch_num=num_batches, avg=True)
-        return {k: np.mean(v) for k, v in eval_metrics.items()}
+        return {k: np.mean(v) for k, v in eval_metrics.items()}, predictions
 
     def get_input_gradients(self) -> list[Tensor]:
         return super().get_input_gradients()
@@ -158,19 +162,19 @@ class SequentialModel(Model):
         ## TODO: Compute loss and accuracy for a batch. Return as a dictionary
         ## If training, then also update the gradients according to the optimizer
         try:
-            prediction = self.forward(x)
-            loss_value = self.compiled_loss.forward(prediction, y)
-            acc_value = self.compiled_acc.forward(prediction, y)
-
             if training:
                 with GradientTape() as tape:
                     prediction = self.forward(x)
-                    loss_value = self.compiled_loss.forward(prediction, y)
+                    loss_value = self.compiled_loss(prediction, y)
                 params = self.weights
                 grads = tape.gradient(loss_value, params)
                 self.optimizer.apply_gradients(params, grads)
+                acc_value = self.compiled_acc.forward(prediction, y)
                 return {"loss": loss_value, "acc": acc_value}
             else:
+                prediction = self.forward(x)
+                loss_value = self.compiled_loss.forward(prediction, y)
+                acc_value = self.compiled_acc.forward(prediction, y)
                 return {"loss": loss_value, "acc": acc_value}, prediction
         except Exception as e:
             print(e)
